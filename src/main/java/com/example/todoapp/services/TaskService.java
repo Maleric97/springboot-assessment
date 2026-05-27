@@ -1,5 +1,6 @@
 package com.example.todoapp.services;
 
+import com.example.todoapp.exceptions.ResourceNotFoundException;
 import com.example.todoapp.models.Task;
 import com.example.todoapp.repositories.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,8 @@ public class TaskService {
     }
 
     public Task findTaskById(Long id) {
-        return taskRepository.getById(id);
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
     }
 
     public List<Task> findAllCompletedTask() {
@@ -32,11 +34,18 @@ public class TaskService {
         return taskRepository.findByCompletedFalse();
     }
 
-    public void deleteTask(Long task) {
-        taskRepository.deleteById(task);
+    public void deleteTask(Long id) {
+        if (!taskRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Task not found with id: " + id);
+        }
+        taskRepository.deleteById(id);
     }
 
-    public Task updateTask(Task task) {
+    public Task updateTask(Long id, Task task) {
+        if (!taskRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Task not found with id: " + id);
+        }
+        task.setId(id);
         return taskRepository.save(task);
     }
 }
